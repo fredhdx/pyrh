@@ -6,6 +6,7 @@ from urllib.parse import unquote
 import dateutil
 import requests
 from yarl import URL
+import shelve
 
 from pyrh import urls
 from pyrh.exceptions import InvalidTickerSymbol
@@ -635,6 +636,18 @@ class Robinhood(InstrumentManager, SessionManager):
 
         return self.get(urls.build_orders(orderId))
 
+    def get_all_history_orders(self):
+        orders = []
+        past_orders = self.order_history()
+        orders.extend(past_orders["results"])
+        while past_orders["next"]:
+            print("{} order fetched".format(len(orders)))
+            next_url = past_orders["next"]
+            past_orders = self.session.get(next_url).json()
+            orders.extend(past_orders["results"])
+        print("{} order fetched".format(len(orders)))
+        return orders
+
     def dividends(self):
         """Wrapper for portfolios
 
@@ -644,6 +657,39 @@ class Robinhood(InstrumentManager, SessionManager):
         """
 
         return self.get(urls.DIVIDENDS)
+
+    def trade_history(self):
+
+        def order_item_info(order, db):
+            # side: .side,  price: .average_price, shares: .cumulative_quantity,
+            # instrument: .instrument, date : .last_transaction_at
+            symbol = self.get_symbol_from_instrument_url(order["instrument"], db)
+            return {
+                "side": order["side"],
+                "price": order["average_price"],
+                "shares": order["cumulative_quantity"],
+                "symbol": symbol,
+                "date": order["last_transaction_at"],
+                "state": order["state"],
+            }
+
+        past_orders = self.get_all_history_orders()
+        instruments_db = shelve.open("instruments.db")
+        orders = [order_item_info(order, instruments_db) for order in past_orders]
+        keys = ["side", "symbol", "shares", "price", "date", "state"]
+
+        return keys, orders
+
+    def get_symbol_from_instrument_url(self, url, db):
+        instrument = {}
+        if url in db:
+            instrument = db[url]
+        else:
+            db[url] = self.session.get(url).json()
+            instrument = db[url]
+        return instrument["symbol"]
+
+
 
     ###########################################################################
     #                           POSITIONS DATA
