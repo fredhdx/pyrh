@@ -71,3 +71,6 @@
 'https://api.robinhood.com/instruments/ca4821f9-06c3-4c22-bbb8-efe569f23d2b/', (107520, 1285)
 'https://api.robinhood.com/instruments/8d16f94a-5b67-4d52-b401-51a51ad62b83/', (109056, 1233)
 'https://api.robinhood.com/instruments/e20a8c4e-a857-4315-93b9-54a9b2b8c48c/', (110592, 1258)
+'https://api.robinhood.com/instruments/45ccb9d7-b9f0-40aa-833f-8381a4e5c3e5/', (112128, 1279)
+'https://api.robinhood.com/instruments/a1d81375-4b0c-4902-8285-03c011726297/', (113664, 1258)
+'https://api.robinhood.com/instruments/dddd9511-b50c-4e82-a3b5-351d34277b3f/', (115200, 1256)

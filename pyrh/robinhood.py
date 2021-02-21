@@ -695,15 +695,29 @@ class Robinhood(InstrumentManager, SessionManager):
     #                           POSITIONS DATA
     ###########################################################################
 
-    def positions(self):
+    def positions(self, url_append=''):
         """Returns the user's positions data
 
         Returns:
             (:object: `dict`): JSON dict from getting positions
 
         """
+        positions = self.get(str(urls.POSITIONS) + url_append)
+        securities = []
+        db = shelve.open("instruments.db")
+        for stock in positions['results']:
+            symbol = self.get_symbol_from_instrument_url(stock['instrument'], db)
+            security = {
+                'symbol': symbol,
+                'price': stock['average_buy_price'],
+                'created': stock['created_at'],
+                'updated': stock['updated_at'],
+                'quantity': stock['quantity']
+            }
+            securities.append(security)
 
-        return self.get(urls.POSITIONS)
+        # return cleaned data and raw data
+        return securities, positions
 
     def securities_owned(self):
         """Returns list of securities' symbols that the user has shares in
@@ -713,7 +727,7 @@ class Robinhood(InstrumentManager, SessionManager):
 
         """
 
-        return self.get(str(urls.POSITIONS) + "?nonzero=true")
+        return self.positions("?nonzero=true")
 
     ###########################################################################
     #                               PLACE ORDER
